@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<salt-grain>
+ <name>powerrde_plugin</name>
+ <version>0.1</version>
+ <api-version/>
+ <title>KLayout and PoweRDE integration plugin</title>
+ <doc>This package provides PowerRDE integration with KLayout.</doc>
+ <doc-url>../..</doc-url>
+ <url/>
+ <license>Copyright (c) 2019 POLYTEDA Software Corporation. All rights reserved.
+This computer code is protected by International Copyright Laws, and may not
+be copied, reprinted, published, or otherwise distributed by any means without
+explicit permission from POLYTEDA Software Corporation. Any unauthorized use,
+duplication or disclosure is prohibited by law and will result in prosecution.
+</license>
+ <author>Yaroslav Kornachevskyi</author>
+ <author-contact>yaroslav@polyteda.com</author-contact>
+ <authored-time/>
+ <installed-time>2019-03-29T19:00:00</installed-time>
+ <icon></icon>
+ <screenshot/>
+</salt-grain>
