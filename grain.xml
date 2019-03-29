@@ -3,7 +3,7 @@
  <name>powerrde_plugin</name>
  <version>0.1</version>
  <api-version/>
- <title>KLayout and PoweRDE integration plugin</title>
+ <title>KLayout and PowerRDE integration plugin</title>
  <doc>This package provides PowerRDE integration with KLayout.</doc>
  <doc-url>../..</doc-url>
  <url/>
