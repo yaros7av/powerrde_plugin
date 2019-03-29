@@ -5,7 +5,7 @@
  <api-version/>
  <title>KLayout and PowerRDE integration plugin</title>
  <doc>This package provides PowerRDE integration with KLayout.</doc>
- <doc-url>../..</doc-url>
+ <doc-url/>
  <url/>
  <license>Copyright (c) 2019 POLYTEDA Software Corporation. All rights reserved.
 This computer code is protected by International Copyright Laws, and may not
