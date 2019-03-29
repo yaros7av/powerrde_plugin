@@ -7,12 +7,7 @@
  <doc>This package provides PowerRDE integration with KLayout.</doc>
  <doc-url/>
  <url/>
- <license>Copyright (c) 2019 POLYTEDA Software Corporation. All rights reserved.
-This computer code is protected by International Copyright Laws, and may not
-be copied, reprinted, published, or otherwise distributed by any means without
-explicit permission from POLYTEDA Software Corporation. Any unauthorized use,
-duplication or disclosure is prohibited by law and will result in prosecution.
-</license>
+ <license>AGPLv3</license>
  <author>Yaroslav Kornachevskyi</author>
  <author-contact>yaroslav@polyteda.com</author-contact>
  <authored-time/>
