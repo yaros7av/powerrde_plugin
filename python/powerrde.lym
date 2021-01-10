@@ -15,16 +15,16 @@
  <interpreter>python</interpreter>
  <dsl-interpreter-name/>
  <text>#
-# Copyright (c) 2019 POLYTEDA Software Corporation. All rights reserved.
+# Copyright (c) 2018-2021 POLYTEDA CLOUD LLC. All rights reserved.
 #
 # This computer code is protected by International Copyright Laws, and may not
 # be copied, reprinted, published, or otherwise distributed by any means without
-# explicit permission from POLYTEDA Software Corporation. Any unauthorized use,
+# explicit permission from POLYTEDA CLOUD LLC. Any unauthorized use,
 # duplication or disclosure is prohibited by law and will result in prosecution.
 #
 # Code for integration of KLayout and PoweRDE
 #
-# version 0.1
+# version 0.2
 #
 # Usage: run PoweRDE from menu "Polyteda"
 #
@@ -33,7 +33,6 @@
 import os
 import re
 import sys
-import shutil
 import struct
 import atexit
 from functools import partial
@@ -63,38 +62,50 @@ class HighlightItem:
         # convert color array to value, i.e. [255,0,0] to 0xFF0000
         return int('%02x%02x%02x' % (r, g, b), 16)
 
+    def is_float(self, value):
+        return re.match(r"[-+]?\d+(\.0*)?$", value) is not None
+    
     def parse(self):
         view = pya.Application.instance().main_window().current_view()
         if view is None:
             return
 
-        self.kl_markers_list.clear()
+        # 2.7 self.kl_markers_list.clear()
+        del self.kl_markers_list[:]
+
         self.xmin = self.ymin = sys.float_info.max
         self.xmax = self.ymax = -sys.float_info.max
         zoom = 1.0
 
         parsed = False
+        cell_name = ""
+        layout = view.active_cellview().layout()
         if self.drc_mode_item:
             for line in self.lines_list:
                 #print(line)
                 line_items = line.split()
                 marker = Marker()
-                marker.cell = line_items[1]
-                zoom = float(line_items[3])
+                cell_name = marker.cell = line_items[1]
+
+                if self.is_float(line_items[3]):
+                    zoom = float(line_items[3])
+                else:
+                    print("incorrect line in parse(): ", line)
+                    continue
+                
                 marker.r, marker.g, marker.b = int(line_items[5]), int(line_items[6]), int(line_items[7])
                 #marker.points = line_items[8:len(line_items)-1]
                 #marker.points = [item for index, item in enumerate(marker.points) if index % 3 != 0]
                 points = [float(item) for index, item in enumerate(line_items[8:len(line_items)-1]) if index % 3 != 0]
                 marker.points = [[x, y] for x, y in zip(points[::2], points[1::2])]
+
                 self.add_marker(view, marker)
                 parsed = True
                 # end of parsing drc
         else:
             marker = Marker()
-            layout = view.active_cellview().layout()
             device_mode = True
             zoom = 1.
-            cell_name = ""
             for line in self.lines_list:
                 if device_mode: # search for commands
                     if line.startswith("layout"):
@@ -134,11 +145,12 @@ class HighlightItem:
                         # parse (0.346 0.139)(0.346 1.139)(1.346 1.139)(1.346 0.139)
                         marker.points = [[float(val) for val in pair.split()] for pair in line[1:-1].split(")(")]
                         self.add_marker(view, marker)
-                        marker.points.clear()
+                        # 2.7 marker.points.clear()
+                        del marker.points[:]
                         parsed = True
                 
-            cell_idx = layout.cell_by_name(cell_name)
-            view.select_cell(cell_idx, view.active_cellview_index())
+        cell_idx = layout.cell_by_name(cell_name)
+        view.select_cell(cell_idx, view.active_cellview_index())
             
         if parsed is True:
             xc = (self.xmax + self.xmin)/2.
@@ -169,7 +181,8 @@ class HighlightItem:
         return self.lines_list
 
     def clear_markers(self):
-        self.kl_markers_list.clear()
+        # 2.7 self.kl_markers_list.clear()
+        del self.kl_markers_list[:]
     
     def set_drc_mode_item(self, mode):
         self.drc_mode_item = mode
@@ -209,9 +222,18 @@ class TestConfig(pya.QObject):
 class PipeReader(pya.QObject):
     def __init__(self, finished_handler, rde_config, test_config, run_parameters, parent = None):
         super(PipeReader, self).__init__(parent)
-        
         self.status = True
-        if shutil.which(rde_config.rde_binary) is None:
+
+        # 2.7 import shutil
+        # 2.7 shutil.which(name)
+        def which(name):
+            path=os.getenv('PATH')
+            for p in path.split(os.path.pathsep):
+                p=os.path.join(p, name)
+                if os.path.exists(p) and os.access(p,os.X_OK):
+                    return p
+        
+        if which(rde_config.rde_binary) is None:
             pya.MessageBox.critical("Error","PowerRDE is not installed in the $PATH environment variable", pya.MessageBox.Ok)
             self.status = False
         else:
@@ -241,8 +263,10 @@ class PipeReader(pya.QObject):
         elif line.startswith("schematic"):
             return
         else:
-            if not line.startswith("PowerRDE"):
+            if not line.startswith("PowerRDE") and not line.startswith("WARNING:"):
                 self.highlight_item.accumulate(line)
+            else:
+                print("incorrect line in parse_ouput(): ", line)
 
     def run_lvs_parse(self):
         self.highlight_item.set_drc_mode_item(False)
@@ -282,10 +306,10 @@ class PowerRDERunner(pya.QObject):
         self.actions = []
         self.menu_items = []
         self.add_menu_item("Configure DRC...", "configure_drc", partial(self.run_powerdrc, parameters=["-klayout", "-task", "drc"]))
-        self.add_menu_item("View DRC Results...", "view_drc", partial(self.run_powerdrc, parameters=["-klayout", "-task", "drcdebug"]))
+        self.add_menu_item("View DRC results...", "view_drc", partial(self.run_powerdrc, parameters=["-klayout", "-task", "drcdebug"]))
         self.add_menu_item("Configure LVS...", "configure_lvs", partial(self.run_powerdrc, parameters=["-klayout", "-task", "lvs"]))
-        self.add_menu_item("View LVS Results...", "view_lvs", partial(self.run_powerdrc, parameters=["-klayout", "-task", "lvsdebug"]))
-        self.add_menu_item("Clear highlight", "clear_highlight", self.clear_highlight)
+        self.add_menu_item("View LVS results...", "view_lvs", partial(self.run_powerdrc, parameters=["-klayout", "-task", "lvsdebug"]))
+        self.add_menu_item("Clear highlights", "clear_highlight", self.clear_highlight)
 
         self.on_current_view_changed()
         self.rde_config = PowerRDEConfig()
